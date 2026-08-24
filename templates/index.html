@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QA-Matrix · Autonomous QA Tester & Automation RAG Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Ambient background glow fields -->
+  <div class="ambient-glow glow-emerald"></div>
+  <div class="ambient-glow glow-cyan"></div>
+  <div class="ambient-glow glow-violet"></div>
+
+  <div class="app-layout">
+    
+    <!-- Top Navigation Bar -->
+    <header class="island-nav">
+      <div class="nav-brand">
+        <div class="brand-logo-ring">
+          <span class="brand-glyph">⚡</span>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">QA-Matrix</span>
+          <span class="brand-tag">RAG AUTOMATION</span>
+        </div>
+      </div>
+
+      <div class="nav-status-group">
+        <div class="status-pill status-active" title="Pinecone Vector Namespace">
+          <span class="status-dot green"></span>
+          <span>Pinecone: <b>qa-specs-v1</b></span>
+        </div>
+        <div class="status-pill status-active" title="Google Gemini 2.0 Flash Engine">
+          <span class="status-dot purple"></span>
+          <span>Engine: <b>Gemini 2.0 Flash</b></span>
+        </div>
+        <div class="status-pill status-active" id="kbStatusPill">
+          <span class="status-dot cyan"></span>
+          <span>RAG Specs: <b id="kbChunkBadge">{{ kb_chunks }} Chunks</b></span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <a href="/architecture-pdf" target="_blank" class="btn-ghost" style="text-decoration: none; color: inherit;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          <span>Architecture PDF</span>
+        </a>
+        <button class="btn-ghost" id="openIngestModalBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Ingest PRD / Spec</span>
+        </button>
+        <button class="btn-ghost" id="openHistoryModalBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>History & Exports</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero Header -->
+    <section class="hero-section">
+      <div class="eyebrow-pill">
+        <span class="eyebrow-sparkle">✦</span>
+        <span>AUTONOMOUS TEST MATRIX · PLAYWRIGHT & CYPRESS CODE GEN · RAG ROOT CAUSE ANALYSIS</span>
+      </div>
+      <h1 class="hero-title">Automated QA Engineering with <span class="gradient-text">Vector RAG Intelligence</span></h1>
+      <p class="hero-subtitle">Ingest PRDs, OpenAPI specs, or user stories to generate exhaustive test matrices, production-ready Playwright/Cypress/PyTest scripts, and instant bug root cause diagnostics.</p>
+
+      <!-- Live QA Agent Pipeline SVG Visualization Widget -->
+      <div class="qa-pipeline-container">
+        <div class="qa-pipeline-card">
+          <!-- Card Header -->
+          <div class="pipeline-header">
+            <div class="pipeline-status">
+              <span class="pipeline-dot"></span>
+              <span class="pipeline-tag">QA AGENT PIPELINE · LIVE RAG ORCHESTRATION</span>
+            </div>
+            <span class="pipeline-meta">3 Agents · 0 Failures · 768-dim Vectors</span>
+          </div>
+
+          <!-- SVG Pipeline Diagram -->
+          <svg width="100%" viewBox="0 0 580 172" class="pipeline-svg">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                <path d="M2 1.5L7.5 5L2 8.5" fill="none" stroke="rgba(6,182,212,0.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+
+            <!-- Connection Paths -->
+            <path d="M116,88 L158,88" fill="none" stroke="rgba(6,182,212,0.3)" stroke-width="1.5" stroke-dasharray="3 5" marker-end="url(#arrow)"/>
+            <path d="M268,88 L306,88" fill="none" stroke="rgba(6,182,212,0.3)" stroke-width="1.5" stroke-dasharray="3 5" marker-end="url(#arrow)"/>
+            <path d="M411,88 C425,88 435,50 448,50" fill="none" stroke="rgba(6,182,212,0.25)" stroke-width="1.5" stroke-dasharray="3 5"/>
+            <path d="M411,88 L448,88" fill="none" stroke="rgba(6,182,212,0.25)" stroke-width="1.5" stroke-dasharray="3 5"/>
+            <path d="M411,88 C425,88 435,126 448,126" fill="none" stroke="rgba(6,182,212,0.25)" stroke-width="1.5" stroke-dasharray="3 5"/>
+
+            <!-- Animated Dots along Paths -->
+            <circle r="2.5" fill="#06b6d4" opacity="1">
+              <animateMotion dur="1.1s" repeatCount="indefinite" path="M116,88 L158,88"/>
+            </circle>
+            <circle r="1.8" fill="#06b6d4" opacity="0.65">
+              <animateMotion dur="1.1s" begin="0.35s" repeatCount="indefinite" path="M116,88 L158,88"/>
+            </circle>
+            <circle r="2.5" fill="#06b6d4" opacity="1">
+              <animateMotion dur="0.9s" begin="0.2s" repeatCount="indefinite" path="M268,88 L306,88"/>
+            </circle>
+            <circle r="2.2" fill="#06b6d4" opacity="0.9">
+              <animateMotion dur="1.3s" begin="0.1s" repeatCount="indefinite" path="M411,88 C425,88 435,50 448,50"/>
+            </circle>
+            <circle r="2.2" fill="#06b6d4" opacity="0.9">
+              <animateMotion dur="1.15s" begin="0.3s" repeatCount="indefinite" path="M411,88 L448,88"/>
+            </circle>
+            <circle r="2.2" fill="#06b6d4" opacity="0.9">
+              <animateMotion dur="1.4s" begin="0.45s" repeatCount="indefinite" path="M411,88 C425,88 435,126 448,126"/>
+            </circle>
+
+            <!-- Node 1: PRD Intake -->
+            <rect x="16" y="66" width="100" height="44" rx="8" fill="#0c1220" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>
+            <text x="66" y="83" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.35)" font-family="system-ui" letter-spacing=".08em">PRD INTAKE</text>
+            <text x="66" y="100" text-anchor="middle" font-size="11.5" fill="rgba(255,255,255,0.85)" font-family="system-ui" font-weight="600">Spec / User Story</text>
+            <text x="66" y="122" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="monospace">spec-input</text>
+
+            <!-- Node 2: Vector DB -->
+            <rect x="158" y="66" width="110" height="44" rx="8" fill="#0c1220" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>
+            <text x="213" y="83" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.35)" font-family="system-ui" letter-spacing=".08em">VECTOR RAG</text>
+            <text x="213" y="100" text-anchor="middle" font-size="11.5" fill="rgba(255,255,255,0.85)" font-family="system-ui" font-weight="600">Semantic Chunks</text>
+            <text x="213" y="122" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.22)" font-family="monospace">pinecone:qa-specs</text>
+
+            <!-- Node 3: LLM QA Engine -->
+            <rect x="306" y="53" width="105" height="70" rx="10" fill="#061226" stroke="#06b6d4" stroke-width="1.2"/>
+            <rect x="318" y="53.5" width="80" height="1.5" rx="0.75" fill="rgba(6,182,212,0.6)"/>
+            <text x="358" y="78" text-anchor="middle" font-size="9" fill="#38bdf8" font-family="system-ui" letter-spacing=".08em" font-weight="700">QA ENGINE</text>
+            <text x="358" y="97" text-anchor="middle" font-size="13" fill="#ffffff" font-family="system-ui" font-weight="700">Gemini Flash</text>
+            <circle cx="346" cy="113" r="2.8" fill="#06b6d4" class="dot-pulse-1"/>
+            <circle cx="358" cy="113" r="2.8" fill="#06b6d4" class="dot-pulse-2"/>
+            <circle cx="370" cy="113" r="2.8" fill="#06b6d4" class="dot-pulse-3"/>
+            <text x="358" y="139" text-anchor="middle" font-size="8.5" fill="rgba(6,182,212,0.6)" font-family="monospace">gemini-3.6-flash</text>
+
+            <!-- Output Node 1: Test Matrix -->
+            <rect x="448" y="35" width="116" height="30" rx="7" fill="#0c1220" stroke="rgba(255,255,255,0.1)" stroke-width="0.6"/>
+            <text x="495" y="53.5" text-anchor="middle" font-size="10.5" fill="rgba(255,255,255,0.75)" font-family="system-ui" font-weight="500">Test Matrix</text>
+            <circle cx="550" cy="50" r="3" fill="#10b981"/>
+
+            <!-- Output Node 2: Automation Scripts -->
+            <rect x="448" y="73" width="116" height="30" rx="7" fill="#0c1220" stroke="rgba(255,255,255,0.1)" stroke-width="0.6"/>
+            <text x="495" y="91.5" text-anchor="middle" font-size="10.5" fill="rgba(255,255,255,0.75)" font-family="system-ui" font-weight="500">Playwright TS</text>
+            <circle cx="550" cy="88" r="3" fill="#38bdf8" class="dot-pulse-1"/>
+
+            <!-- Output Node 3: Bug RCA -->
+            <rect x="448" y="111" width="116" height="30" rx="7" fill="#0c1220" stroke="rgba(255,255,255,0.1)" stroke-width="0.6"/>
+            <text x="495" y="129.5" text-anchor="middle" font-size="10.5" fill="rgba(255,255,255,0.75)" font-family="system-ui" font-weight="500">Bug Ticket RCA</text>
+            <circle cx="550" cy="126" r="3" fill="#f59e0b" class="dot-pulse-2"/>
+          </svg>
+
+          <!-- Live Log Ticker -->
+          <div class="pipeline-ticker">
+            <span class="ticker-arrow">›</span>
+            <div class="ticker-message-box">
+              <span id="pipelineLiveLog">Received: "Synthesize full test matrix for OAuth2 Token Refresh PRD..."</span>
+            </div>
+          </div>
+
+          <!-- Stats Footer -->
+          <div class="pipeline-stats">
+            <div class="stat-col">
+              <span class="stat-lbl">TEST MATRICES</span>
+              <span class="stat-val" id="pipelineRunsCount">1,248</span>
+            </div>
+            <div class="stat-col">
+              <span class="stat-lbl">EMBEDDING VECTORS</span>
+              <span class="stat-val">768-dim</span>
+            </div>
+            <div class="stat-col">
+              <span class="stat-lbl">AVG LATENCY</span>
+              <span class="stat-val">342ms</span>
+            </div>
+            <div class="stat-col align-right">
+              <span class="stat-lbl">STACK</span>
+              <span class="stat-stack">Gemini Flash · Pinecone</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-container">
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-matrix">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          <span>Test Matrix & Plan</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-scripts">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Automation Code Synthesizer</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-bug-rca">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="4"/></svg>
+          <span>Bug & Root Cause Analyzer</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-live-runner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Live API Test Runner</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-knowledge-base">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          <span>RAG Spec Manager</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 1: TEST MATRIX GENERATOR -->
+    <section id="tab-matrix" class="tab-pane active">
+      <div class="grid-2col">
+        <!-- Input Configuration Card -->
+        <div class="bezel-card-outer">
+          <div class="bezel-card-inner">
+            <div class="card-header">
+              <div class="header-icon cyan-glow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <div>
+                <h2 class="card-title">Feature & Scope Specification</h2>
+                <p class="card-desc">Define target requirements to query RAG vector memory</p>
+              </div>
+            </div>
+
+            <form id="matrixForm" class="styled-form">
+              <div class="form-group">
+                <label for="featureNameInput">Feature / Module Name</label>
+                <div class="input-wrapper">
+                  <input type="text" id="featureNameInput" placeholder="e.g. OAuth2 Multi-Factor Auth & Session Renewal" value="User Authentication & JWT Token Refresh Flow" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="testScopeSelect">Test Scope Depth</label>
+                  <select id="testScopeSelect">
+                    <option value="full" selected>Comprehensive Matrix (Full Suite)</option>
+                    <option value="smoke">Smoke & Sanity Suite (P0 Blocker)</option>
+                    <option value="regression">Regression & Edge Boundaries</option>
+                    <option value="security">Security, Auth & Injection</option>
+                    <option value="api_contract">REST API Contract & Schema</option>
+                  </select>
+                </div>
+                <div class="form-group half">
+                  <label for="targetEnvInput">Target Environment</label>
+                  <input type="text" id="targetEnvInput" value="Next.js App + FastAPI Backend" placeholder="e.g. React Web, iOS App, Microservices">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="label-with-action">
+                  <label for="requirementsInput">User Stories & Acceptance Criteria</label>
+                  <button type="button" class="btn-text-action" id="loadSampleReqBtn">Load Sample Spec</button>
+                </div>
+                <textarea id="requirementsInput" rows="7" placeholder="Paste user stories, Gherkin syntax (Given/When/Then), OpenAPI endpoints, or business rules here..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary" id="generateMatrixBtn">
+                  <span class="btn-spinner hidden" id="matrixSpinner"></span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <span>Synthesize Test Matrix via RAG</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Output Test Matrix Card -->
+        <div class="bezel-card-outer">
+          <div class="bezel-card-inner">
+            <div class="card-header flex-between">
+              <div class="flex-align-center gap-3">
+                <div class="header-icon green-glow">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                </div>
+                <div>
+                  <h2 class="card-title">Generated Test Matrix & Strategy</h2>
+                  <p class="card-desc" id="matrixSubtitle">Awaiting generation</p>
+                </div>
+              </div>
+
+              <div class="export-actions hidden" id="matrixExportGroup">
+                <button class="btn-sm btn-outline" id="exportMatrixJsonBtn">JSON</button>
+                <button class="btn-sm btn-outline" id="exportMatrixMdBtn">Markdown</button>
+                <button class="btn-sm btn-accent" id="sendToSynthesizerBtn">⚡ Generate Code</button>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state-view" id="matrixEmptyState">
+              <div class="empty-icon-ring">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              </div>
+              <h3>No Test Matrix Generated Yet</h3>
+              <p>Enter your feature requirements or load sample specs, then click <b>Synthesize Test Matrix</b> to extract positive, negative, boundary, and security test cases.</p>
+            </div>
+
+            <!-- Populated Matrix View -->
+            <div class="matrix-content-view hidden" id="matrixResultView">
+              <!-- Summary & Metrics Strip -->
+              <div class="metrics-grid">
+                <div class="metric-card">
+                  <span class="metric-label">Risk Level</span>
+                  <span class="metric-value badge-risk" id="resRiskBadge">MEDIUM</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Total Test Cases</span>
+                  <span class="metric-value text-cyan" id="resTotalCases">0</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">P0 / P1 Critical</span>
+                  <span class="metric-value text-red" id="resCriticalCases">0</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Est. Run Time</span>
+                  <span class="metric-value text-emerald" id="resEstTime">0m</span>
+                </div>
+              </div>
+
+              <!-- Executive Strategy Summary -->
+              <div class="strategy-callout" id="resStrategySummary"></div>
+
+              <!-- Test Case Cards List -->
+              <div class="test-cases-list" id="testCasesContainer"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- TAB 2: AUTOMATION SCRIPT SYNTHESIZER -->
+    <section id="tab-scripts" class="tab-pane">
+      <div class="grid-2col">
+        <!-- Controls & Configuration -->
+        <div class="bezel-card-outer">
+          <div class="bezel-card-inner">
+            <div class="card-header">
+              <div class="header-icon purple-glow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              </div>
+              <div>
+                <h2 class="card-title">Automation Code Synthesizer</h2>
+                <p class="card-desc">Generate production-ready test code from test cases</p>
+              </div>
+            </div>
+
+            <form id="synthForm" class="styled-form">
+              <div class="form-group">
+                <label for="synthFeatureName">Target Feature / Module</label>
+                <input type="text" id="synthFeatureName" value="Authentication & Token Refresh" placeholder="e.g. Payment Gateway Checkout">
+              </div>
+
+              <div class="form-group">
+                <label for="synthFramework">Automation Framework Target</label>
+                <select id="synthFramework">
+                  <option value="playwright_ts" selected>Playwright (TypeScript / Async)</option>
+                  <option value="playwright_py">Playwright (Python / Pytest)</option>
+                  <option value="cypress_js">Cypress v13 (JavaScript / POM)</option>
+                  <option value="pytest_api">PyTest + Requests (Python API Suite)</option>
+                  <option value="postman_json">Postman Collection v2.1 (JSON with Tests)</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="synthApiBase">Base API URL</label>
+                  <input type="text" id="synthApiBase" value="https://api.myapp.com/v1">
+                </div>
+                <div class="form-group half">
+                  <label for="synthWebBase">Base Web App URL</label>
+                  <input type="text" id="synthWebBase" value="https://app.myapp.com">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="synthCustomContext">Test Scenarios / Custom Instructions (Optional)</label>
+                <textarea id="synthCustomContext" rows="6" placeholder="Provide additional custom mock data, auth token headers, or specific assertion conditions..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary btn-purple" id="generateScriptBtn">
+                  <span class="btn-spinner hidden" id="scriptSpinner"></span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  <span>Synthesize Production Code</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Code Viewer & Output -->
+        <div class="bezel-card-outer">
+          <div class="bezel-card-inner">
+            <div class="card-header flex-between">
+              <div class="flex-align-center gap-3">
+                <div class="header-icon cyan-glow">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                </div>
+                <div>
+                  <h2 class="card-title" id="codeEditorFilename">auth_flow.spec.ts</h2>
+                  <p class="card-desc" id="codeEditorSub">Executable test script</p>
+                </div>
+              </div>
+
+              <div class="code-actions">
+                <button class="btn-sm btn-outline" id="copyCodeBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <span>Copy Code</span>
+                </button>
+                <button class="btn-sm btn-primary" id="downloadScriptBtn">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  <span>Download</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Code Container -->
+            <div class="code-block-wrapper">
+              <pre><code id="codeOutput" class="language-typescript">// Select your framework and click 'Synthesize Production Code' to generate ready-to-run automation suites.</code></pre>
+            </div>
+
+            <!-- Execution Instructions -->
+            <div class="setup-instructions-box hidden" id="setupInstructionsBox">
+              <h4>🚀 Execution & Setup Guide</h4>
+              <ul id="setupInstructionsList"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- TAB 3: BUG & ROOT CAUSE ANALYZER -->
+    <section id="tab-bug-rca" class="tab-pane">
+      <div class="grid-2col">
+        <!-- Log Input -->
+        <div class="bezel-card-outer">
+          <div class="bezel-card-inner">
+            <div class="card-header">
+              <div class="header-icon red-glow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <div>
+                <h2 class="card-title">Failure Log & Stack Trace Intake</h2>
+                <p class="card-desc">Cross-reference error traces against indexed requirements</p>
+              </div>
+            </div>
+
+            <form id="bugForm" class="styled-form">
+              <div class="form-group">
+                <label for="bugContextInput">Test Context / Endpoint / UI Flow</label>
+                <input type="text" id="bugContextInput" value="POST /api/v1/auth/refresh (JWT Token Renewal)" placeholder="e.g. Checkout Stripe Webhook, User Profile Edit">
+              </div>
+
+              <div class="form-group">
+                <div class="label-with-action">
+                  <label for="bugLogInput">Failure Log, Stack Trace, or Assertion Error</label>
+                  <button type="button" class="btn-text-action" id="loadSampleBugBtn">Load Sample Trace</button>
+                </div>
+                <textarea id="bugLogInput" rows="9" class="mono-input" placeholder="Paste runtime traceback, Playwright timeout error, HTTP 500 error body, or console exception log..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="bugExpectedInput">Expected Requirement / User Expectation (Optional)</label>
+                <input type="text" id="bugExpectedInput" placeholder="e.g. Return HTTP 401 with JSON { error: 'token_expired' } instead of 500 Unhandled Exception">
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary btn-red" id="analyzeBugBtn">
+                  <span class="btn-spinner hidden" id="bugSpinner"></span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <span>Diagnose Root Cause & Generate Jira Ticket</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Bug Ticket & RCA Output -->
+        <div class="bezel-card-outer">
+          <div class="bezel-card-inner">
+            <div class="card-header flex-between">
+              <div class="flex-align-center gap-3">
+                <div class="header-icon red-glow">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div>
+                  <h2 class="card-title">Jira / GitHub Defect Report</h2>
+                  <p class="card-desc" id="bugReportSubtitle">RCA & Spec Citation</p>
+                </div>
+              </div>
+
+              <button class="btn-sm btn-outline hidden" id="copyJiraTicketBtn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copy Jira Markdown</span>
+              </button>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state-view" id="bugEmptyState">
+              <div class="empty-icon-ring red-ring">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              </div>
+              <h3>No Bug Analyzed Yet</h3>
+              <p>Paste a runtime stack trace or click <b>Load Sample Trace</b> to see AI root cause investigation and instant bug ticket formatting.</p>
+            </div>
+
+            <!-- Bug Result View -->
+            <div class="bug-content-view hidden" id="bugResultView">
+              <div class="bug-header-badges">
+                <span class="badge-pill badge-red" id="bugSeverityBadge">CRITICAL</span>
+                <span class="badge-pill badge-orange" id="bugPriorityBadge">P0 - Blocker</span>
+                <span class="badge-pill badge-gray" id="bugComponentBadge">Auth Service</span>
+              </div>
+
+              <h3 class="bug-view-title" id="bugTitleView"></h3>
+
+              <div class="section-card">
+                <h4>🔬 Root Cause Analysis (RCA)</h4>
+                <p id="bugRcaText"></p>
+              </div>
+
+              <div class="section-card">
+                <h4>📜 Violated Spec Requirement (RAG Citation)</h4>
+                <p id="bugViolatedSpecText"></p>
+              </div>
+
+              <div class="section-card">
+                <h4>🛠 Recommended Code Fix</h4>
+                <pre class="fix-code-block"><code id="bugFixCode"></code></pre>
+              </div>
+
+              <div class="section-card">
+                <h4>📋 Reproduction Steps</h4>
+                <ol id="bugStepsList" class="styled-steps-list"></ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- TAB 4: LIVE API TEST RUNNER -->
+    <section id="tab-live-runner" class="tab-pane">
+      <div class="grid-2col">
+        <!-- Request Builder -->
+        <div class="bezel-card-outer">
+          <div class="bezel-card-inner">
+            <div class="card-header">
+              <div class="header-icon green-glow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+              <div>
+                <h2 class="card-title">Live API Request Builder</h2>
+                <p class="card-desc">Execute live HTTP calls and evaluate test assertions</p>
+              </div>
+            </div>
+
+            <form id="apiRunnerForm" class="styled-form">
+              <div class="form-row">
+                <div class="form-group quarter">
+                  <label for="apiMethodSelect">Method</label>
+                  <select id="apiMethodSelect">
+                    <option value="GET" selected>GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="PATCH">PATCH</option>
+                  </select>
+                </div>
+                <div class="form-group three-quarters">
+                  <label for="apiUrlInput">Target Endpoint URL</label>
+                  <input type="text" id="apiUrlInput" value="https://httpbin.org/get" placeholder="https://api.yourdomain.com/v1/health" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="apiExpectedStatus">Expected HTTP Status</label>
+                  <input type="number" id="apiExpectedStatus" value="200">
+                </div>
+                <div class="form-group half">
+                  <label>Quick Presets</label>
+                  <div class="presets-row">
+                    <button type="button" class="btn-preset" data-url="https://httpbin.org/get" data-method="GET" data-status="200">GET 200</button>
+                    <button type="button" class="btn-preset" data-url="https://httpbin.org/status/404" data-method="GET" data-status="404">GET 404</button>
+                    <button type="button" class="btn-preset" data-url="https://httpbin.org/post" data-method="POST" data-status="200">POST JSON</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="apiHeadersInput">Request Headers (JSON)</label>
+                <textarea id="apiHeadersInput" rows="2" class="mono-input" placeholder='{"Authorization": "Bearer token123", "X-Request-ID": "qa-999"}'></textarea>
+              </div>
+
+              <div class="form-group" id="apiBodyGroup">
+                <label for="apiBodyInput">Request Payload (JSON)</label>
+                <textarea id="apiBodyInput" rows="4" class="mono-input" placeholder='{"email": "tester@example.com", "role": "admin"}'></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary btn-emerald" id="runApiBtn">
+                  <span class="btn-spinner hidden" id="apiSpinner"></span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  <span>Execute Live Test & Assertions</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Live Results & Assertion View -->
+        <div class="bezel-card-outer">
+          <div class="bezel-card-inner">
+            <div class="card-header flex-between">
+              <div class="flex-align-center gap-3">
+                <div class="header-icon cyan-glow">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </div>
+                <div>
+                  <h2 class="card-title">Live Response & Verification</h2>
+                  <p class="card-desc" id="apiResponseSub">Awaiting execution</p>
+                </div>
+              </div>
+
+              <div class="status-badge-live hidden" id="apiLiveStatusBadge">
+                <span class="status-dot"></span>
+                <span id="apiStatusCode">200 OK</span>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state-view" id="apiEmptyState">
+              <div class="empty-icon-ring green-ring">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <h3>Ready to Execute API Assertions</h3>
+              <p>Enter an endpoint URL or choose a preset and click <b>Execute Live Test</b> to verify response latency, payload schema, and status codes.</p>
+            </div>
+
+            <!-- Populated API Result -->
+            <div class="api-result-view hidden" id="apiResultView">
+              <!-- Assertion Results Table -->
+              <div class="assertions-card">
+                <h4>🎯 Assertion Checklist</h4>
+                <div class="assertions-list" id="assertionsContainer"></div>
+              </div>
+
+              <!-- Latency & Headers Strip -->
+              <div class="metrics-grid small-metrics">
+                <div class="metric-card">
+                  <span class="metric-label">Latency</span>
+                  <span class="metric-value text-emerald" id="resLatency">-- ms</span>
+                </div>
+                <div class="metric-card">
+                  <span class="metric-label">Overall Test Result</span>
+                  <span class="metric-value text-cyan" id="resOverallPass">PASSED</span>
+                </div>
+              </div>
+
+              <!-- Response Body -->
+              <div class="section-card">
+                <h4>📦 Response Body</h4>
+                <div class="code-block-wrapper small-code">
+                  <pre><code id="apiResponseBody" class="language-json"></code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- TAB 5: RAG SPEC MANAGER & KNOWLEDGE BASE -->
+    <section id="tab-knowledge-base" class="tab-pane">
+      <div class="grid-2col">
+        <!-- Ingestion Form -->
+        <div class="bezel-card-outer">
+          <div class="bezel-card-inner">
+            <div class="card-header">
+              <div class="header-icon cyan-glow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </div>
+              <div>
+                <h2 class="card-title">Vectorize New Specification</h2>
+                <p class="card-desc">Ingest PRDs, OpenAPI Specs, or User Stories into RAG memory</p>
+              </div>
+            </div>
+
+            <form id="kbIngestForm" class="styled-form" enctype="multipart/form-data">
+              <div class="form-group">
+                <label for="kbSpecTitle">Specification / Document Title</label>
+                <input type="text" id="kbSpecTitle" placeholder="e.g. Payments Architecture PRD v2.4" required>
+              </div>
+
+              <div class="form-group">
+                <label for="kbCategory">Specification Type</label>
+                <select id="kbCategory">
+                  <option value="PRD" selected>Product Requirement Document (PRD)</option>
+                  <option value="OpenAPI">OpenAPI / Swagger API Spec</option>
+                  <option value="UserStories">Agile User Stories & Acceptance Criteria</option>
+                  <option value="Architecture">System Architecture & Threat Model</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Upload PDF Document (Optional)</label>
+                <div class="file-drop-zone" id="fileDropZone">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <p id="fileDropText">Drag & drop PRD PDF here or <span class="browse-link">browse</span></p>
+                  <input type="file" id="kbFileInput" accept=".pdf,.txt,.json,.md" class="hidden-file-input">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="kbContentText">Or Paste Specification Text</label>
+                <textarea id="kbContentText" rows="6" placeholder="Paste requirement text, API schemas, or business criteria..."></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn-primary" id="kbIngestBtn">
+                  <span class="btn-spinner hidden" id="kbSpinner"></span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                  <span>Vectorize & Index into RAG Store</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Knowledge Base Index Overview -->
+        <div class="bezel-card-outer">
+          <div class="bezel-card-inner">
+            <div class="card-header flex-between">
+              <div class="flex-align-center gap-3">
+                <div class="header-icon purple-glow">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                </div>
+                <div>
+                  <h2 class="card-title">Indexed Specifications Repository</h2>
+                  <p class="card-desc">Active RAG memory for test generation and bug RCA</p>
+                </div>
+              </div>
+
+              <button class="btn-sm btn-danger" id="clearKbBtn">Clear Memory</button>
+            </div>
+
+            <div class="spec-list" id="specsListContainer">
+              {% if specs %}
+                {% for spec in specs %}
+                <div class="spec-card">
+                  <div class="spec-card-header">
+                    <span class="spec-tag">{{ spec.category }}</span>
+                    <span class="spec-chunks">{{ spec.chunks }} Vector Chunks</span>
+                  </div>
+                  <h4 class="spec-title">{{ spec.title }}</h4>
+                  <p class="spec-meta">Active in Pinecone & Local Vector Index</p>
+                </div>
+                {% endfor %}
+              {% else %}
+                <div class="empty-state-view">
+                  <div class="empty-icon-ring purple-ring">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                  </div>
+                  <h3>No Documents Indexed Yet</h3>
+                  <p>Upload a PRD or OpenAPI spec to enable high-accuracy semantic RAG test generation.</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL: Quick History & Exports -->
+  <div class="modal-backdrop hidden" id="historyModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Saved Test Suites & Reports History</h3>
+        <button class="btn-close" id="closeHistoryModalBtn">&times;</button>
+      </div>
+      <div class="modal-body" id="historyModalBody">
+        <p class="text-muted">Loading history...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

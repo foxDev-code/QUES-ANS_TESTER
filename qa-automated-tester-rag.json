@@ -1,0 +1,123 @@
+{
+  "name": "QA Automated Tester & Automation RAG Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "qa-trigger",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook (CI/CD / PR Trigger)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "id": "node-webhook-qa"
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:8001/api/generate-test-matrix",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"feature_name\": {{$json.body.feature_name || \"CI Pull Request Feature\"}},\n  \"test_scope\": {{$json.body.scope || \"full\"}},\n  \"target_env\": {{$json.body.target_env || \"Staging / Pre-prod\"}},\n  \"requirements\": {{$json.body.requirements || $json.body.pr_diff || \"Automated CI/CD PR verification\"}}\n}",
+        "options": {}
+      },
+      "name": "Call QA RAG Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300],
+      "id": "node-qa-rag-call"
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:8001/api/generate-automation-scripts",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"feature_name\": {{$json.data.feature_name}},\n  \"framework\": \"playwright_ts\",\n  \"test_cases\": {{$json.data.test_cases}},\n  \"api_base_url\": {{$node[\"Webhook (CI/CD / PR Trigger)\"].json.body.api_base_url || \"https://staging-api.example.com\"}}\n}",
+        "options": {}
+      },
+      "name": "Synthesize Playwright Tests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "id": "node-synth-scripts"
+    },
+    {
+      "parameters": {
+        "channel": "={{$node[\"Webhook (CI/CD / PR Trigger)\"].json.body.slack_channel || \"#qa-automation\"}}",
+        "text": "=⚡ *QA-Matrix Autonomous Test Run Complete*\n\n*Feature:* {{$node[\"Call QA RAG Engine\"].json.data.feature_name}}\n*Risk Assessment:* {{$node[\"Call QA RAG Engine\"].json.data.risk_level}}\n*Total Test Cases Generated:* {{$node[\"Call QA RAG Engine\"].json.data.test_cases.length}}\n*Framework Generated:* Playwright TypeScript (`{{$json.data.filename}}`)\n\n📊 *Executive Summary:*\n{{$node[\"Call QA RAG Engine\"].json.data.summary}}\n\n🔗 *Status:* Automated Test Suite Ready for CI/CD Execution.",
+        "otherOptions": {}
+      },
+      "name": "Slack (Post Test Report)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [920, 300],
+      "id": "node-slack-qa-report",
+      "credentials": {
+        "slackApi": {
+          "id": "slack_creds",
+          "name": "Slack API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"feature_name\": {{$node[\"Call QA RAG Engine\"].json.data.feature_name}},\n  \"risk_level\": {{$node[\"Call QA RAG Engine\"].json.data.risk_level}},\n  \"test_cases_count\": {{$node[\"Call QA RAG Engine\"].json.data.test_cases.length}},\n  \"test_cases\": {{$node[\"Call QA RAG Engine\"].json.data.test_cases}},\n  \"automation_code\": {{$json.data.code}},\n  \"filename\": {{$json.data.filename}}\n}",
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [920, 500],
+      "id": "node-respond-webhook"
+    }
+  ],
+  "connections": {
+    "Webhook (CI/CD / PR Trigger)": {
+      "main": [
+        [
+          {
+            "node": "Call QA RAG Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call QA RAG Engine": {
+      "main": [
+        [
+          {
+            "node": "Synthesize Playwright Tests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthesize Playwright Tests": {
+      "main": [
+        [
+          {
+            "node": "Slack (Post Test Report)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "qa-rag-automation-v1"
+}

@@ -1,0 +1,317 @@
+[
+  {
+    "id": "suite_1787479915",
+    "created_at": 1787479915.049938,
+    "feature_name": "OAuth2 JWT Authentication & Session Renewal API",
+    "scope": "full",
+    "data": {
+      "feature_name": "OAuth2 JWT Authentication & Session Renewal API",
+      "summary": "Comprehensive test strategy covering core OAuth2 login workflows, JWT lifespan validations, httpOnly cookie security attributes, token rotation mechanics, rate limiting brute-force defense, injection prevention, and CORS policies for Next.js 14 and FastAPI architectures. High security risk profile due to authentication and token handling boundaries.",
+      "risk_level": "CRITICAL",
+      "test_metrics": {
+        "total_cases": 9,
+        "positive_cases": 2,
+        "negative_cases": 2,
+        "boundary_edge_cases": 1,
+        "security_cases": 4,
+        "estimated_exec_time_mins": 25
+      },
+      "test_cases": [
+        {
+          "id": "TC-001",
+          "category": "Functional / Positive",
+          "priority": "P0",
+          "title": "Verify successful user login with valid credentials and cookie attributes",
+          "preconditions": "Registered active user account exists in DB (user@example.com / Password123!).",
+          "steps": [
+            "Step 1: Send POST request to /api/v1/auth/login with valid email and password.",
+            "Step 2: Inspect HTTP response status code.",
+            "Step 3: Validate JSON body schema and access_token properties.",
+            "Step 4: Inspect Set-Cookie header for refresh_token parameters."
+          ],
+          "test_data": "{\"email\": \"user@example.com\", \"password\": \"Password123!\"}",
+          "expected_result": "HTTP status 200 OK. Response body contains { access_token: \"<valid_jwt>\", token_type: \"bearer\", expires_in: 900 }. Set-Cookie header sets 'refresh_token' with flags: httpOnly, Secure, SameSite=Strict, Max-Age=604800 (7 days).",
+          "rag_requirement_ref": "Acceptance Criteria 1: POST /api/v1/auth/login success specifications"
+        },
+        {
+          "id": "TC-002",
+          "category": "Boundary & Edge Case",
+          "priority": "P1",
+          "title": "Validate password field complexity schema and boundary rejection",
+          "preconditions": "Auth API endpoint active.",
+          "steps": [
+            "Step 1: Send POST to /api/v1/auth/login with password < 8 characters ('Pass1!').",
+            "Step 2: Send POST with password missing uppercase ('password123!').",
+            "Step 3: Send POST with password missing special character ('Password123').",
+            "Step 4: Verify response status codes and validation error structures."
+          ],
+          "test_data": "Payload 1: {\"email\": \"user@example.com\", \"password\": \"Pass1!\"}; Payload 2: {\"email\": \"user@example.com\", \"password\": \"password123!\"}; Payload 3: {\"email\": \"user@example.com\", \"password\": \"Password123\"}",
+          "expected_result": "HTTP status 422 Unprocessable Entity or HTTP 400 Bad Request for all invalid password attempts. Detailed field validation errors returned without processing credential verification.",
+          "rag_requirement_ref": "Acceptance Criteria 1: Password validation rules (min 8 chars, 1 uppercase, 1 special char)"
+        },
+        {
+          "id": "TC-003",
+          "category": "Security & Auth",
+          "priority": "P0",
+          "title": "Verify brute-force rate limiting and 30-minute lockout mechanism",
+          "preconditions": "Target user exists and rate limiter cache (e.g., Redis) is initialized.",
+          "steps": [
+            "Step 1: Perform 5 consecutive failed POST /api/v1/auth/login requests using invalid passwords within 15 minutes.",
+            "Step 2: Verify HTTP 401 Unauthorized for attempts 1 through 5.",
+            "Step 3: Perform 6th POST request with correct valid credentials within the 15-minute window.",
+            "Step 4: Check response status code and account lock state."
+          ],
+          "test_data": "Attempts 1-5: {\"email\": \"victim@example.com\", \"password\": \"WrongPass1!\"}; Attempt 6: {\"email\": \"victim@example.com\", \"password\": \"CorrectPass1!\"}",
+          "expected_result": "6th attempt returns HTTP 429 Too Many Requests. User account is locked for 30 minutes, denying even valid credential logins until lockout window expires.",
+          "rag_requirement_ref": "Acceptance Criteria 1: Rate limiting max 5 failed attempts in 15 mins -> 30 min lock (HTTP 429)"
+        },
+        {
+          "id": "TC-004",
+          "category": "Functional / Positive",
+          "priority": "P0",
+          "title": "Verify successful session renewal and refresh token rotation defense",
+          "preconditions": "User logged in; valid non-expired refresh_token cookie stored.",
+          "steps": [
+            "Step 1: Send POST request to /api/v1/auth/refresh including valid refresh_token cookie.",
+            "Step 2: Check HTTP response status code and JSON body for new access_token.",
+            "Step 3: Check Set-Cookie header for updated refresh_token value.",
+            "Step 4: Query database to ensure old refresh_token is invalidated/rotated and new token record exists."
+          ],
+          "test_data": "Cookie: refresh_token=<valid_session_cookie>",
+          "expected_result": "HTTP status 200 OK. Returns new access_token. New refresh_token cookie issued. Previous refresh_token is marked revoked/rotated in DB.",
+          "rag_requirement_ref": "Acceptance Criteria 2: POST /api/v1/auth/refresh token rotation defense"
+        },
+        {
+          "id": "TC-005",
+          "category": "Negative / Error Handling",
+          "priority": "P1",
+          "title": "Reject session renewal request using expired or blacklisted refresh token",
+          "preconditions": "Refresh token is expired (TTL > 7 days) or manually revoked/blacklisted in database.",
+          "steps": [
+            "Step 1: Send POST request to /api/v1/auth/refresh with expired or revoked refresh_token cookie.",
+            "Step 2: Inspect HTTP status code and response payload."
+          ],
+          "test_data": "Cookie: refresh_token=<expired_or_revoked_cookie>",
+          "expected_result": "HTTP status 401 Unauthorized with JSON response { \"error\": \"token_expired_or_revoked\" }.",
+          "rag_requirement_ref": "Acceptance Criteria 2: Expired/blacklisted token handling"
+        },
+        {
+          "id": "TC-006",
+          "category": "Security & Auth",
+          "priority": "P0",
+          "title": "Verify token reuse detection and breach mitigation during token rotation replay attack",
+          "preconditions": "A valid refresh token (Token A) was refreshed to yield Token B, rendering Token A rotated/invalidated.",
+          "steps": [
+            "Step 1: Replay an already used/rotated refresh token (Token A) in a POST request to /api/v1/auth/refresh.",
+            "Step 2: Verify HTTP response status and error body.",
+            "Step 3: Inspect user active sessions in DB to ensure session family is revoked."
+          ],
+          "test_data": "Cookie: refresh_token=<previously_rotated_token_A>",
+          "expected_result": "HTTP status 401 Unauthorized { \"error\": \"token_expired_or_revoked\" }. Token reuse alert triggered; all child refresh tokens associated with the compromise chain are invalidated.",
+          "rag_requirement_ref": "Acceptance Criteria 2: Token Rotation Defense"
+        },
+        {
+          "id": "TC-007",
+          "category": "Security & Auth",
+          "priority": "P0",
+          "title": "Verify rejection of SQL and NoSQL Injection payloads in authentication requests",
+          "preconditions": "Auth API endpoint running in test environment.",
+          "steps": [
+            "Step 1: Send POST request to /api/v1/auth/login with SQL Injection payload in email field (' OR '1'='1).",
+            "Step 2: Send POST request with NoSQL Injection payload in JSON ($gt operator).",
+            "Step 3: Verify HTTP status codes and error payloads."
+          ],
+          "test_data": "SQLi Payload: {\"email\": \"admin@example.com' OR '1'='1\", \"password\": \"Password123!\"}; NoSQLi Payload: {\"email\": {\"$gt\": \"\"}, \"password\": \"Password123!\"}",
+          "expected_result": "HTTP status 400 Bad Request or 422 Unprocessable Entity. Request is safely rejected without executing malicious query.",
+          "rag_requirement_ref": "Acceptance Criteria 3: Reject SQL/NoSQL injection payloads with HTTP 400"
+        },
+        {
+          "id": "TC-008",
+          "category": "Security & Auth",
+          "priority": "P1",
+          "title": "Verify strict CORS origin restrictions on authentication endpoints",
+          "preconditions": "FastAPI CORS middleware configured with strict allowed origins list (e.g., https://app.example.com).",
+          "steps": [
+            "Step 1: Send OPTIONS / POST request to /api/v1/auth/login with header Origin: https://malicious-site.com.",
+            "Step 2: Inspect Access-Control-Allow-Origin response header."
+          ],
+          "test_data": "Header: Origin: https://malicious-site.com",
+          "expected_result": "Access-Control-Allow-Origin header does not match malicious origin or is absent. Next.js/Browser blocks cross-origin credential sharing.",
+          "rag_requirement_ref": "Acceptance Criteria 3: CORS headers must only allow whitelisted origins"
+        },
+        {
+          "id": "TC-009",
+          "category": "Negative / Error Handling",
+          "priority": "P2",
+          "title": "Verify raw stack trace exposure prevention during unexpected system errors",
+          "preconditions": "Mock internal DB or service failure during POST /api/v1/auth/login.",
+          "steps": [
+            "Step 1: Trigger an unhandled exception or forced DB disconnect during login execution.",
+            "Step 2: Inspect HTTP status code and response payload body."
+          ],
+          "test_data": "Simulated DB connectivity loss during POST /api/v1/auth/login",
+          "expected_result": "HTTP status 500 Internal Server Error with generic error JSON (e.g., { \"error\": \"internal_server_error\" }). Zero traceback, module path, or framework internal leaks present in response body.",
+          "rag_requirement_ref": "Acceptance Criteria 3: Never expose raw stack traces in error responses"
+        }
+      ],
+      "suggested_automation_framework": "PyTest + HTTPX / Playwright API Testing Context",
+      "rag_citations": [
+        {
+          "title": "Authentication & Token Refresh Spec",
+          "relevance": "Provides exact specifications for login endpoints, JWT/Cookie expiration criteria, rate limiting thresholds, and token rotation security behavior."
+        }
+      ]
+    }
+  },
+  {
+    "id": "suite_1787478286",
+    "created_at": 1787478286.850004,
+    "feature_name": "Authentication & Token Refresh Flow",
+    "scope": "full",
+    "data": {
+      "feature_name": "Authentication & Token Refresh Flow",
+      "summary": "Comprehensive test strategy covering authentication, token lifecycle management, security hardening, and rate limiting in Next.js + FastAPI architecture. Testing focuses on verifying 15-minute access token expiration, 7-day httpOnly refresh cookie rotation, rate-limiting thresholds (5 failed attempts per 15 minutes), and injection vulnerability mitigations. Quality gates enforce 100% pass rate on P0 security and functional automation cases prior to staging/production deployment.",
+      "risk_level": "CRITICAL",
+      "test_metrics": {
+        "total_cases": 8,
+        "positive_cases": 2,
+        "negative_cases": 2,
+        "boundary_edge_cases": 2,
+        "security_cases": 2,
+        "estimated_exec_time_mins": 25
+      },
+      "test_cases": [
+        {
+          "id": "TC-001",
+          "category": "Functional / Positive",
+          "priority": "P0",
+          "title": "Verify successful user login with valid credentials issuing 15-min JWT and 7-day httpOnly refresh cookie",
+          "preconditions": "User account exists in FastAPI backend with verified status.",
+          "steps": [
+            "Step 1: Send POST request to /api/v1/auth/login with valid email and password in request body.",
+            "Step 2: Inspect response HTTP status code, response body, and response headers.",
+            "Step 3: Validate JWT access token claims (exp time set to +15 minutes).",
+            "Step 4: Inspect Set-Cookie header for refresh token parameters."
+          ],
+          "test_data": "Payload: {\"email\": \"user@example.com\", \"password\": \"ValidP@ssword123!\"}",
+          "expected_result": "Status 200 OK. Body contains valid JWT access token expiring in 15 minutes. Set-Cookie header contains refresh token with flags: HttpOnly, Secure, SameSite=Strict, Max-Age=604800 (7 days).",
+          "rag_requirement_ref": "POST /api/v1/auth/login requires valid email and password. On success returns JWT access token valid 15 mins and httpOnly refresh cookie valid 7 days."
+        },
+        {
+          "id": "TC-002",
+          "category": "Security & Auth",
+          "priority": "P0",
+          "title": "Verify login rate limiting triggers HTTP 429 after 5 consecutive failed attempts in 15 minutes",
+          "preconditions": "User account exists. Rate limiter cache (e.g., Redis) is cleared for target IP/email.",
+          "steps": [
+            "Step 1: Execute 5 sequential POST requests to /api/v1/auth/login with incorrect password.",
+            "Step 2: Verify HTTP 401 status for attempts 1 through 5.",
+            "Step 3: Execute 6th POST request to /api/v1/auth/login with correct or incorrect password within 15 minutes.",
+            "Step 4: Verify response status code and headers for 6th attempt."
+          ],
+          "test_data": "Payload: {\"email\": \"user@example.com\", \"password\": \"WrongPassword!\"}",
+          "expected_result": "Attempts 1-5 return HTTP 401 Unauthorized. 6th attempt returns HTTP 429 Too Many Requests with 'Retry-After' header indicating wait time within the 15-minute window.",
+          "rag_requirement_ref": "Rate limits to 5 failed attempts per 15 mins."
+        },
+        {
+          "id": "TC-003",
+          "category": "Functional / Positive",
+          "priority": "P0",
+          "title": "Verify refresh token rotation via POST /api/v1/auth/refresh",
+          "preconditions": "User is authenticated and possesses a valid httpOnly refresh cookie.",
+          "steps": [
+            "Step 1: Send POST request to /api/v1/auth/refresh attaching valid refresh cookie.",
+            "Step 2: Parse response body and Set-Cookie header.",
+            "Step 3: Verify new JWT access token is issued with refreshed 15-min expiration.",
+            "Step 4: Verify a new httpOnly refresh cookie is returned and old refresh token is invalidated."
+          ],
+          "test_data": "Cookie: refresh_token=<valid_7_day_cookie>",
+          "expected_result": "Status 200 OK. New JWT access token issued. Set-Cookie header sets a rotated refresh token cookie. Old refresh token is marked used/invalidated in database/cache.",
+          "rag_requirement_ref": "POST /api/v1/auth/refresh rotates the refresh token."
+        },
+        {
+          "id": "TC-004",
+          "category": "Security & Auth",
+          "priority": "P0",
+          "title": "Verify SQL Injection resilience in login request parameters",
+          "preconditions": "FastAPI database models connected via ORM/parameterized queries.",
+          "steps": [
+            "Step 1: Send POST request to /api/v1/auth/login with SQL injection payloads in email field.",
+            "Step 2: Send POST request with SQL injection payload in password field.",
+            "Step 3: Check response status codes and ensure no database syntax errors or unhandled server errors (500) are returned."
+          ],
+          "test_data": "Payload 1: {\"email\": \"' OR '1'='1' --\", \"password\": \"anything\"}\nPayload 2: {\"email\": \"admin@example.com\", \"password\": \"' OR '1'='1\"}",
+          "expected_result": "HTTP 400 Bad Request or HTTP 401 Unauthorized. No authentication bypass occurs. Database error stack traces are never exposed in response body.",
+          "rag_requirement_ref": "POST /api/v1/auth/login requires valid email and password."
+        },
+        {
+          "id": "TC-005",
+          "category": "Boundary & Edge Case",
+          "priority": "P1",
+          "title": "Verify access token rejection after exact 15-minute expiration window",
+          "preconditions": "JWT access token generated 15 minutes and 1 second ago.",
+          "steps": [
+            "Step 1: Obtain a valid JWT access token.",
+            "Step 2: Simulate time progression past 15 minutes (or mock system clock/JWT token exp claim).",
+            "Step 3: Send GET request to protected endpoint (e.g., /api/v1/users/me) using Authorization: Bearer <expired_token>."
+          ],
+          "test_data": "Authorization: Bearer <JWT with exp = currentTime - 1s>",
+          "expected_result": "HTTP 401 Unauthorized with detail 'Token has expired'. Next.js frontend intercepted and triggered automatic refresh flow.",
+          "rag_requirement_ref": "returns JWT access token valid 15 mins"
+        },
+        {
+          "id": "TC-006",
+          "category": "Security & Auth",
+          "priority": "P0",
+          "title": "Verify detection and prevention of refresh token reuse (Token Family Revocation)",
+          "preconditions": "A refresh token has already been rotated via /api/v1/auth/refresh.",
+          "steps": [
+            "Step 1: Capture Refresh Token A.",
+            "Step 2: Call /api/v1/auth/refresh with Token A to receive Refresh Token B.",
+            "Step 3: Attempt to call /api/v1/auth/refresh again using the previously invalidated Token A.",
+            "Step 4: Verify system revokes Token B and invalidates user session family."
+          ],
+          "test_data": "Cookie: refresh_token=<Token_A_already_rotated>",
+          "expected_result": "HTTP 401 Unauthorized or HTTP 403 Forbidden. The entire token family associated with the compromised token is revoked immediately.",
+          "rag_requirement_ref": "POST /api/v1/auth/refresh rotates the refresh token."
+        },
+        {
+          "id": "TC-007",
+          "category": "Negative / Error Handling",
+          "priority": "P1",
+          "title": "Verify POST /api/v1/auth/refresh handling with missing or malformed cookie",
+          "preconditions": "None.",
+          "steps": [
+            "Step 1: Send POST request to /api/v1/auth/refresh without any Cookie header.",
+            "Step 2: Send POST request to /api/v1/auth/refresh with Cookie: refresh_token=invalid_garbage_string."
+          ],
+          "test_data": "Case A: No cookie header\nCase B: Cookie: refresh_token=xyz123malformedjwt",
+          "expected_result": "HTTP 401 Unauthorized returned for both requests with explicit error payload (e.g., 'Refresh token missing or invalid').",
+          "rag_requirement_ref": "POST /api/v1/auth/refresh rotates the refresh token."
+        },
+        {
+          "id": "TC-008",
+          "category": "Boundary & Edge Case",
+          "priority": "P2",
+          "title": "Verify rate limiter counter resets after 15-minute cooldown period",
+          "preconditions": "User/IP has reached 5 failed login attempts and is currently rate-limited (429).",
+          "steps": [
+            "Step 1: Trigger 5 failed attempts to lock account rate-limiting counter.",
+            "Step 2: Wait 15 minutes (or mock rate limiter TTL expiration).",
+            "Step 3: Send POST request to /api/v1/auth/login with valid credentials."
+          ],
+          "test_data": "Payload: {\"email\": \"user@example.com\", \"password\": \"ValidP@ssword123!\"}",
+          "expected_result": "HTTP 200 OK. Account successfully authenticates after rate limit window expires, returning new access token and refresh cookie.",
+          "rag_requirement_ref": "Rate limits to 5 failed attempts per 15 mins."
+        }
+      ],
+      "suggested_automation_framework": "PyTest (with httpx for FastAPI API integration tests) + Playwright Python (for end-to-end Next.js authentication flow validation)",
+      "rag_citations": [
+        {
+          "title": "Authentication & Token Refresh Spec",
+          "relevance": "Provides exact constraints for endpoint paths (/api/v1/auth/login, /api/v1/auth/refresh), 5-attempt/15-min rate limit, 15-min JWT lifespan, 7-day httpOnly refresh cookie expiration, and token rotation rules."
+        }
+      ]
+    }
+  }
+]

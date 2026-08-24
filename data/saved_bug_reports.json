@@ -1,0 +1,24 @@
+[
+  {
+    "id": "bug_1787478346",
+    "created_at": 1787478346.786279,
+    "data": {
+      "bug_title": "[Auth Service] HTTP 500 Unhandled UnboundLocalError when refreshing expired JWT token",
+      "severity": "HIGH",
+      "priority": "P1 - Critical",
+      "affected_component": "Auth Service / Token Handler",
+      "root_cause_analysis": "In `refresh_token_handler`, the variable `payload` is assigned the return value of `jwt.decode(...)` inside a `try` block. When an expired token is processed, PyJWT raises `jwt.exceptions.ExpiredSignatureError` during evaluation, preventing `payload` from being initialized. Execution then proceeds to a block or exception handler that attempts to reference `payload` without prior initialization or early return, raising `UnboundLocalError: local variable 'payload' referenced before assignment`. The failure to explicitly catch `ExpiredSignatureError` and gracefully return an HTTP 401 response causes the unhandled exception to bubble up as an HTTP 500 Internal Server Error.",
+      "violated_spec_or_requirement": "Authentication & Token Refresh Spec: Invalid or expired refresh tokens must be intercepted gracefully, returning an HTTP 401 Unauthorized response with JSON body `{\"error\": \"token_expired\"}` rather than causing an unhandled server error.",
+      "steps_to_reproduce": [
+        "1. Obtain a valid access and refresh token pair via POST /api/v1/auth/login.",
+        "2. Wait for the refresh token's expiration window to elapse (or mock an expired JWT token signature).",
+        "3. Send a POST request to /api/v1/auth/refresh with the expired refresh token in the httpOnly cookie or payload.",
+        "4. Inspect the HTTP response code and server execution log."
+      ],
+      "expected_result": "The server catches the expired signature exception and returns HTTP 401 Unauthorized with JSON body: {\"error\": \"token_expired\"}.",
+      "actual_result": "The server crashes with UnboundLocalError triggered by jwt.exceptions.ExpiredSignatureError and returns HTTP 500 Internal Server Error.",
+      "recommended_code_fix": "```python\n# In refresh_token_handler\nimport jwt\nfrom fastapi import HTTPException, status # or equivalent framework imports\n\ndef refresh_token_handler(refresh_token: str):\n    try:\n        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[\"HS256\"])\n    except jwt.exceptions.ExpiredSignatureError:\n        return JSONResponse(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            content={\"error\": \"token_expired\"}\n        )\n    except jwt.exceptions.InvalidTokenError:\n        return JSONResponse(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            content={\"error\": \"invalid_token\"}\n        )\n    \n    # Proceed using safely extracted payload\n    user_id = payload.get(\"sub\")\n    ...\n```",
+      "markdown_jira_ticket": "## Bug Description\nWhen attempting to refresh an expired JWT token via `POST /api/v1/auth/refresh`, the server encounters an unhandled `UnboundLocalError` following a `jwt.exceptions.ExpiredSignatureError`. This results in an HTTP 500 Internal Server Error instead of the expected HTTP 401 Unauthorized response.\n\n## Root Cause\nThe variable `payload` is referenced after or within an exception path in `refresh_token_handler` without guaranteed initialization. Because `jwt.decode()` throws `ExpiredSignatureError` before completing assignment, referencing `payload` raises `UnboundLocalError`.\n\n## Stack Trace\n```text\njwt.exceptions.ExpiredSignatureError: Signature has expired\nUnboundLocalError: local variable 'payload' referenced before assignment in refresh_token_handler\nPOST /api/v1/auth/refresh HTTP/1.1 500 Internal Server Error\n```\n\n## Steps to Reproduce\n1. Send `POST /api/v1/auth/refresh` with an expired JWT refresh cookie.\n2. Observe response status code `500 Internal Server Error`.\n\n## Expected Behavior\nReturn HTTP `401 Unauthorized` with JSON payload:\n```json\n{\n  \"error\": \"token_expired\"\n}\n```\n\n## Proposed Fix\nAdd an explicit `try-except` block for `jwt.exceptions.ExpiredSignatureError` inside `refresh_token_handler` and ensure an early HTTP 401 response is returned before accessing `payload`."
+    }
+  }
+]
